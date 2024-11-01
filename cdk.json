@@ -15,7 +15,9 @@
     ]
   },
   "context": {
-    "sns_topic_arn": "arn:aws:sns:eu-west-2:522278677766:Streamlit",
+    "domain_name": "howdareyou.click",
+    "subdomain": "streamlit",
+
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [
