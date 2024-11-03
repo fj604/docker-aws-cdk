@@ -17,11 +17,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
 
     - name: Install dependencies
-      run: npm install
+      run: pip install -r requirements.txt
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -30,4 +32,4 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
     - name: Deploy CDK stack
-      run: npx cdk deploy --require-approval never
+      run: cdk deploy --require-approval never
