@@ -1,6 +1,8 @@
 
 # Welcome to your CDK Python project!
 
+[![Deploy CDK Stack](https://github.com/fj604/docker-aws-cdk/actions/workflows/deploy.yml/badge.svg)](https://github.com/fj604/docker-aws-cdk/actions/workflows/deploy.yml)
+
 This is a blank project for CDK development with Python.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
