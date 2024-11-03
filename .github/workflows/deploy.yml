@@ -35,4 +35,4 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
     - name: Deploy CDK stack
-      run: npx cdk deploy --require-approval never
+      run: npx cdk deploy --ci --force --require-approval never
