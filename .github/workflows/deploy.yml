@@ -32,7 +32,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-region: eu-west-2
-        role-to-assume: $AWS_ROLE_TO_ASSUME
+        role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
 
     - name: Deploy CDK stack
       run: npx cdk deploy --ci --force --require-approval never
