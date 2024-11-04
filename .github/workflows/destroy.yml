@@ -29,7 +29,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-region: eu-west-2
-        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        role-to-assume: $AWS_ROLE_TO_ASSUME
 
     - name: Destroy CDK stack
       run: npx cdk destroy --force
