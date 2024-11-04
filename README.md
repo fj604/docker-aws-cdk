@@ -1,6 +1,8 @@
 
 # Welcome to your CDK Python project!
 
+[![CodeQL](https://github.com/fj604/docker-aws-cdk/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/fj604/docker-aws-cdk/actions/workflows/github-code-scanning/codeql)
+
 [![Deploy CDK Stack](https://github.com/fj604/docker-aws-cdk/actions/workflows/deploy.yml/badge.svg)](https://github.com/fj604/docker-aws-cdk/actions/workflows/deploy.yml)
 
 This is a blank project for CDK development with Python.
