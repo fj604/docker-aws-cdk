@@ -3,7 +3,7 @@ name: Deploy CDK Stack
 on:
   push:
     branches:
-      - main
+      - chatbot
 
 permissions:
   id-token: write
