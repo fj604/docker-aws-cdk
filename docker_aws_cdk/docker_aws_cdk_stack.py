@@ -23,18 +23,13 @@ class DockerAwsCdkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # The code that defines your stack goes here
-
-        # example resource
-        # queue = sqs.Queue(
-        #     self, "DockerAwsCdkQueue",
-        #     visibility_timeout=Duration.seconds(300),
-        # )
-
-        # cluster: ecs.Cluster
 
         domain_name = self.node.try_get_context("domain_name")
         subdomain = self.node.try_get_context("subdomain")
+        print(f"domain_name: {domain_name}")
+        print(f"subdomain: {subdomain}")
+        if not domain_name or not subdomain:
+            raise ValueError("Please provide context values: domain_name and subdomain")
 
         hosted_zone = route53.HostedZone.from_lookup(
             self,
