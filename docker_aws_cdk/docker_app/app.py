@@ -1,59 +1,69 @@
 import streamlit as st
-import jwt  # For decoding JWT
-import boto3  # For SNS
-import dotenv  # For environment variables
-import os  # For environment variables
+from langchain_aws.chat_models import ChatBedrockConverse
+from langchain.schema import HumanMessage, AIMessage
+from langchain_core.output_parsers import StrOutputParser
 
-dotenv.load_dotenv()
+# Set the page title and icon
+st.set_page_config(page_title="🦜🔗 Chatbot App", page_icon="🤖")
 
-# Get the headers
-headers = st.context.headers
+# Sidebar for model selection
+model_options = {
+    "Anthropic: Claude 3 Sonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
+    "Anthropic: Claude 3 Haiku": "anthropic.claude-3-haiku-20240307-v1:0"
+}
+selected_model = st.sidebar.selectbox("Select Model", options=list(model_options.keys()), index=0)
+model_id = model_options[selected_model]
 
-auth_header = headers.get("X-Amzn-Oidc-Data", "")
-if not auth_header:
-    st.error("JWT not found")
-token = None
+# Initialize chat history in session state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-if auth_header:
-    token = auth_header
-    try:
-        decoded_token = jwt.decode(token, options={"verify_signature": False})
-        email = decoded_token.get("email", "")
-        st.write(f"## User email: {email}")
-    except Exception as e:
-        st.error(f"Error decoding JWT: {e}")
-else:
-    st.error("No Authorization header found")
+# Display existing chat messages
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
+# Function to generate and display AI response
+def generate_response(prompt):
+    model = ChatBedrockConverse(model_id=model_id)
 
-# Prompt for subject and message
-st.write("## Send a Message")
+    # Prepare the input history to maintain context
+    conversation_history = [
+        HumanMessage(content=msg["content"]) if msg["role"] == "user" else
+        AIMessage(content=msg["content"])
+        for msg in st.session_state.messages
+    ]
 
-# Show topic ARN
-sns_topic_arn = os.environ.get("SNS_TOPIC_ARN")
+    # Add the current prompt to the conversation history
+    conversation_history.append(HumanMessage(content=prompt))
 
-if sns_topic_arn:
-    print(f"SNS_TOPIC_ARN: {sns_topic_arn}")
-else:
-    st.error("SNS_TOPIC_ARN environment variable not set.")
+    # Create the chain with StrOutputParser for streaming
+    chain = model | StrOutputParser()
 
-subject = st.text_input("Subject", value="Hello from Streamlit!")
-message = st.text_area("Message", value="Hello, world!")
+    # Create a placeholder for the assistant's response
+    assistant_message_placeholder = st.chat_message("assistant")
+    response_placeholder = assistant_message_placeholder.markdown("...")
 
-if st.button("Submit"):
-    # Send the message with the subject to the SNS topic
-    if not sns_topic_arn:
-        st.error("SNS_TOPIC_ARN environment variable not set.")
-    else:
-        # Initialize SNS client
-        sns = boto3.client("sns")
-        try:
-            response = sns.publish(
-                TopicArn=sns_topic_arn, Message=message, Subject=subject
-            )
-            st.success(f"Message sent! Message ID: {response['MessageId']}")
-        except Exception as e:
-            st.error(f"Error sending message: {e}")
+    # Loop through chunks and update the placeholder
+    response = ""
+    for chunk in chain.stream(conversation_history):
+        if isinstance(chunk, str):
+            response += chunk
+            response_placeholder.markdown(response + "▌")
+        else:
+            st.warning("Received unexpected chunk format. Please check model output.")
 
-# Logout link
-st.markdown('<a href="/logout" target="_self">Sign Out</a>', unsafe_allow_html=True)
+    # Finalize the message
+    response_placeholder.markdown(response)
+    return response
+
+# Input field for user message
+if prompt := st.chat_input("Enter your message here..."):
+    # Display user message
+    st.chat_message("user").markdown(prompt)
+    # Append user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    # Generate AI response
+    response = generate_response(prompt)
+    # Append AI response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": response})
