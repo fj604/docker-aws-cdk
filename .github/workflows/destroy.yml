@@ -32,4 +32,4 @@ jobs:
         role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
 
     - name: Destroy CDK stack
-      run: npx cdk destroy --force
+      run: npx cdk destroy --ci --force --context domain_name=${{ vars.DOMAIN_NAME }} --context subdomain=${{ vars.SUBDOMAIN }}
