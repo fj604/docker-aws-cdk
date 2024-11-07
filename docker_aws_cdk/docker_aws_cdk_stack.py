@@ -1,7 +1,5 @@
 from aws_cdk import (
-    # Duration,
     Stack,
-    # aws_sqs as sqs,
 )
 from constructs import Construct
 import aws_cdk.aws_ecs_patterns as ecs_patterns
@@ -117,7 +115,7 @@ class DockerAwsCdkStack(Stack):
             self,
             "UserPoolDomain",
             cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix="my-user-pool-domain",
+                domain_prefix=f"{subdomain}-{domain_name}.replace('.', '-')"
             ),
             user_pool=user_pool,
         )
