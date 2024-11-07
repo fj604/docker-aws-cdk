@@ -1,7 +1,27 @@
+import jwt
 import streamlit as st
 from langchain_aws.chat_models import ChatBedrockConverse
 from langchain.schema import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
+
+
+def get_jwt_token():
+    headers = st.context.headers
+    auth_header = headers.get("X-Amzn-Oidc-Data", "")
+    token = None
+
+    if auth_header:
+        token = auth_header
+        try:
+            decoded_token = jwt.decode(token, options={"verify_signature": False})
+            return decoded_token
+        except Exception as e:
+            print(f"Error decoding JWT: {e}")
+            return None
+    else:
+        print("No Authorization header found")
+        return None
+
 
 # Set the page title and icon
 st.set_page_config(page_title="🦜🔗 Chatbot App", page_icon="🤖")
@@ -11,6 +31,12 @@ model_options = {
     "Anthropic: Claude 3 Sonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
     "Anthropic: Claude 3 Haiku": "anthropic.claude-3-haiku-20240307-v1:0"
 }
+
+token = get_jwt_token()
+if token:
+    st.sidebar.header(get_jwt_token().get("email", "Not authenticated"))
+else:
+    st.sidebar.header("Not authenticated")
 selected_model = st.sidebar.selectbox("Select Model", options=list(model_options.keys()), index=0)
 model_id = model_options[selected_model]
 
