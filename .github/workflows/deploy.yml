@@ -35,4 +35,4 @@ jobs:
         role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
 
     - name: Deploy CDK stack
-      run: npx cdk deploy --ci --force --require-approval never --context domainName=${{ vars.DOMAIN_NAME }} --context subDomain=${{ vars.SUBDOMAIN }}
+      run: npx cdk deploy --ci --force --require-approval never --context domain_name=${{ vars.DOMAIN_NAME }} --context subdomain=${{ vars.SUBDOMAIN }}
