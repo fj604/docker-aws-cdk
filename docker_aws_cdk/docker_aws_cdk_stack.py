@@ -79,6 +79,17 @@ class DockerAwsCdkStack(Stack):
 
         topic.grant_publish(load_balanced_fargate_service.task_definition.task_role)
 
+        # Add Bedrock permissions to task role
+        load_balanced_fargate_service.task_definition.task_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "bedrock:InvokeModel",
+                    "bedrock:InvokeModelWithResponseStream",
+                ],
+                resources=["*"],
+            )
+        )
+
         # Define a Cognito User Pool and client
 
         user_pool = cognito.UserPool(
@@ -115,7 +126,7 @@ class DockerAwsCdkStack(Stack):
             self,
             "UserPoolDomain",
             cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix=f"{subdomain}.{domain_name}".replace('.', '-')
+                domain_prefix=f"{subdomain}.{domain_name}".replace(".", "-")
             ),
             user_pool=user_pool,
         )
