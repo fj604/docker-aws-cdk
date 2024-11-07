@@ -115,7 +115,7 @@ class DockerAwsCdkStack(Stack):
             self,
             "UserPoolDomain",
             cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix=f"{subdomain}-{domain_name}.replace('.', '-')"
+                domain_prefix=f"{subdomain}.{domain_name}".replace('.', '-')
             ),
             user_pool=user_pool,
         )
