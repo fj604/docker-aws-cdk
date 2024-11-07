@@ -23,7 +23,6 @@ class DockerAwsCdkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-
         domain_name = self.node.try_get_context("domain_name")
         subdomain = self.node.try_get_context("subdomain")
         print(f"domain_name: {domain_name}")
@@ -81,7 +80,7 @@ class DockerAwsCdkStack(Stack):
         )
 
         topic.grant_publish(load_balanced_fargate_service.task_definition.task_role)
-        
+
         # Define a Cognito User Pool and client
 
         user_pool = cognito.UserPool(
@@ -122,7 +121,6 @@ class DockerAwsCdkStack(Stack):
             ),
             user_pool=user_pool,
         )
-
 
         listener = load_balanced_fargate_service.listener
 
