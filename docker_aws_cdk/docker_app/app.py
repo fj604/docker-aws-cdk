@@ -1,4 +1,6 @@
 import jwt
+import os
+import boto3
 import streamlit as st
 from langchain_aws.chat_models import ChatBedrockConverse
 from langchain.schema import HumanMessage, AIMessage
@@ -23,6 +25,33 @@ def get_jwt_token():
         return None
 
 
+def send_sns_message(message, subject):
+    sns_topic_arn = os.environ.get("SNS_TOPIC_ARN")
+    if not sns_topic_arn:
+        raise ValueError("SNS_TOPIC_ARN environment variable not set.")
+
+    # Initialize SNS client
+    sns = boto3.client("sns")
+    try:
+        response = sns.publish(
+            TopicArn=sns_topic_arn, Message=message, Subject=subject
+        )
+        return response['MessageId']
+    except Exception as e:
+        raise ValueError(f"Error sending message: {e}")
+
+
+subject = st.text_input("Subject", value="Hello from Streamlit!")
+message = st.text_area("Message", value="Hello, world!")
+
+
+def send_message_history():
+    message_history = "\n".join(
+        [f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages]
+    )
+    message_id = send_sns_message(message_history, subject)
+    st.info(f"Message sent with ID: {message_id}")
+
 # Set the page title and icon
 st.set_page_config(page_title="🦜🔗 Chatbot App", page_icon="🤖")
 
@@ -43,6 +72,10 @@ model_id = model_options[selected_model]
 # Initialize chat history in session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+# Add button to sidebar to send message history
+if st.sidebar.button("Send Message History"):
+    send_message_history()
 
 # Display existing chat messages
 for message in st.session_state.messages:
