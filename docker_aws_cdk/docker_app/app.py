@@ -1,15 +1,12 @@
 import jwt
 import os
 import boto3
-import dotenv
 import streamlit as st
 from langchain_aws.chat_models import ChatBedrockConverse
 from langchain.schema import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 import json
 
-# Load environment variables from .env file
-dotenv.load_dotenv()
 
 def get_jwt_token():
     headers = st.context.headers
