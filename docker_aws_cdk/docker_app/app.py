@@ -3,13 +3,14 @@ import os
 import boto3
 import streamlit as st
 from langchain_aws.chat_models import ChatBedrockConverse
-from langchain.schema import HumanMessage
+from langchain.schema import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
+from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 import json
 
 def get_jwt_token():
-    headers = st.context.headers
+    headers = getattr(st.context, 'headers', {})
     auth_header = headers.get("X-Amzn-Oidc-Data", "")
     if auth_header:
         try:
@@ -32,9 +33,10 @@ def send_sns_message(message, subject):
         raise ValueError(f"Error sending message: {e}")
 
 def send_message_history(token):
-    message_history = [{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.messages]
-    message_id = send_sns_message(json.dumps(message_history), subject=token.get("email"))
-    st.info(f"Message sent with ID: {message_id}")
+    if "messages" in st.session_state:
+        message_history = [{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.messages]
+        message_id = send_sns_message(json.dumps(message_history), subject=token.get("email"))
+        st.info(f"Message sent with ID: {message_id}")
 
 st.set_page_config(page_title="🦜🔗 Chatbot App", page_icon="🤖")
 
@@ -62,20 +64,25 @@ for message in st.session_state.messages:
 
 def generate_response(prompt):
     model = ChatBedrockConverse(model_id=model_id)
-    conversation_history = memory.load_memory()
-    conversation_history.append(HumanMessage(content=prompt))
-    chain = model | StrOutputParser()
+    for msg in st.session_state.messages:
+        if msg["role"] == "user":
+            memory.add_message(HumanMessage(content=msg["content"]))
+        else:
+            memory.add_message(AIMessage(content=msg["content"]))
+    
+    chain = ConversationChain(llm=model, memory=memory, output_parser=StrOutputParser())
     assistant_message_placeholder = st.chat_message("assistant")
     response_placeholder = assistant_message_placeholder.markdown("...")
     response = ""
-    for chunk in chain.stream(conversation_history):
+
+    for chunk in chain.stream(prompt):
         if isinstance(chunk, str):
             response += chunk
             response_placeholder.markdown(response + "▌")
         else:
             st.warning("Received unexpected chunk format. Please check model output.")
+
     response_placeholder.markdown(response)
-    memory.save_memory(conversation_history)
     return response
 
 if prompt := st.chat_input("Enter your message here..."):
