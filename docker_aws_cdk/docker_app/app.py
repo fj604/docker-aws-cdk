@@ -40,16 +40,11 @@ def send_sns_message(message, subject):
     except Exception as e:
         raise ValueError(f"Error sending message: {e}")
 
-
-subject = st.text_input("Subject", value="Hello from Streamlit!")
-message = st.text_area("Message", value="Hello, world!")
-
-
 def send_message_history():
     message_history = "\n".join(
         [f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages]
     )
-    message_id = send_sns_message(message_history, subject)
+    message_id = send_sns_message(message_history, subject=get_jwt_token().get("email"))
     st.info(f"Message sent with ID: {message_id}")
 
 # Set the page title and icon
