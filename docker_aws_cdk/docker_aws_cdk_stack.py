@@ -138,7 +138,7 @@ class DockerAwsCdkStack(Stack):
             self,
             "LogoutFunction",
             runtime=_lambda.Runtime.PYTHON_3_12,
-            handler="handler.handler",
+            handler="logout.handler",
             code=_lambda.Code.from_asset(path.join(path.dirname(__file__), "lambda")),
             environment={
                 "LOGOUT_URL": logout_url,
