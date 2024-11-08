@@ -1,11 +1,15 @@
 import jwt
 import os
 import boto3
+import dotenv
 import streamlit as st
 from langchain_aws.chat_models import ChatBedrockConverse
 from langchain.schema import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
+import json
 
+# Load environment variables from .env file
+dotenv.load_dotenv()
 
 def get_jwt_token():
     headers = st.context.headers
@@ -41,10 +45,12 @@ def send_sns_message(message, subject):
         raise ValueError(f"Error sending message: {e}")
 
 def send_message_history():
-    message_history = "\n".join(
-        [f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages]
-    )
-    message_id = send_sns_message(message_history, subject=get_jwt_token().get("email"))
+    message_history = [
+        {"role": msg["role"], "content": msg["content"]}
+        for msg in st.session_state.messages
+    ]
+    message_history_json = json.dumps(message_history)
+    message_id = send_sns_message(message_history_json, subject=get_jwt_token().get("email"))
     st.info(f"Message sent with ID: {message_id}")
 
 # Set the page title and icon
@@ -68,9 +74,10 @@ model_id = model_options[selected_model]
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Add button to sidebar to send message history
-if st.sidebar.button("Send Message History"):
-    send_message_history()
+
+if token and os.environ.get("SNS_TOPIC_ARN"):
+    if st.sidebar.button("Send Message History"):
+        send_message_history()
 
 # Display existing chat messages
 for message in st.session_state.messages:
