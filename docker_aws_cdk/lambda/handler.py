@@ -6,7 +6,6 @@ def handler(event, context):
     if not logout_url:
         raise Exception('LOGOUT_URL environment variable is not set')
     
-    print(f"Received event: {json.dumps(event, indent=2)}")
     print(f"Clearing ALB cookies and redirecting to logout URL {logout_url}")
     
     return {

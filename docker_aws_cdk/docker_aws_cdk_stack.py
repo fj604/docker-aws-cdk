@@ -81,7 +81,6 @@ class DockerAwsCdkStack(Stack):
 
         topic.grant_publish(load_balanced_fargate_service.task_definition.task_role)
 
-        # Add Bedrock permissions to task role
         load_balanced_fargate_service.task_definition.task_role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
@@ -91,8 +90,6 @@ class DockerAwsCdkStack(Stack):
                 resources=["*"],
             )
         )
-
-        # Define a Cognito User Pool and client
 
         user_pool = cognito.UserPool(
             self,
@@ -166,7 +163,6 @@ class DockerAwsCdkStack(Stack):
             priority=1,
         )
 
-        # Add listener rule for OIDC auth using Cognito User Pool
         listener.add_action(
             "OIDCAction",
             action=elbv2.ListenerAction.authenticate_oidc(
