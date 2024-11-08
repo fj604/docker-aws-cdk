@@ -7,8 +7,10 @@ from aws_cdk.aws_ecr_assets import DockerImageAsset
 import aws_cdk.aws_ecs as ecs
 import aws_cdk.aws_sns as sns
 import aws_cdk.aws_iam as iam
+import aws_cdk.aws_lambda as _lambda
 import aws_cdk.aws_cognito as cognito
 import aws_cdk.aws_elasticloadbalancingv2 as elbv2
+from aws_cdk import aws_elasticloadbalancingv2_targets as targets
 import aws_cdk.aws_route53 as route53
 import aws_cdk.aws_route53_targets as route53_targets
 import aws_cdk.aws_certificatemanager as acm
@@ -133,6 +135,37 @@ class DockerAwsCdkStack(Stack):
 
         listener = load_balanced_fargate_service.listener
 
+        logout_url = f"https://{user_pool_domain.domain_name}.auth.{self.region}.amazoncognito.com/logout?client_id={user_pool_client.user_pool_client_id}&logout_uri=https://{subdomain}.{domain_name}"
+
+        logout_function = _lambda.Function(
+            self,
+            "LogoutFunction",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="handler.handler",
+            code=_lambda.Code.from_asset(path.join(path.dirname(__file__), "lambda")),
+            environment={
+                "LOGOUT_URL": logout_url,
+            },
+        )
+
+        lambda_target = targets.LambdaTarget(logout_function)
+
+        lambda_target_group = elbv2.ApplicationTargetGroup(
+            self,
+            "LambdaTargetGroup",
+            targets=[lambda_target],
+            target_type=elbv2.TargetType.LAMBDA,
+        )
+
+        lambda_target_group.set_attribute("lambda.multi_value_headers.enabled", "true")
+
+        listener.add_action(
+            "Logout",
+            action=elbv2.ListenerAction.forward([lambda_target_group]),
+            conditions=[elbv2.ListenerCondition.path_patterns(["/logout"])],
+            priority=1,
+        )
+
         # Add listener rule for OIDC auth using Cognito User Pool
         listener.add_action(
             "OIDCAction",
@@ -150,5 +183,5 @@ class DockerAwsCdkStack(Stack):
                 ),
             ),
             conditions=[elbv2.ListenerCondition.path_patterns(["/*"])],
-            priority=1,
+            priority=2,
         )
